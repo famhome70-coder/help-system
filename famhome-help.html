@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamHome Help Center</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" media="print">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#F8F6F1; --ink:#26303D; --muted:#75726A; --faint:#9B968A; --border:#E4E1D8;
+  --amber:#DB9A3C; --sage:#7C9473; --slate:#3D5A73; --coral:#D9634F;
+  --card:#FFFFFF;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; font-family:'Inter',sans-serif; color:var(--ink); background-color:#F9F7F2;
+  background-image:
+    radial-gradient(circle at 4% 2%, rgba(219,154,60,0.16) 0%, transparent 30%),
+    radial-gradient(circle at 98% 8%, rgba(124,148,115,0.16) 0%, transparent 36%),
+    radial-gradient(circle at 90% 96%, rgba(61,90,115,0.12) 0%, transparent 40%),
+    radial-gradient(circle at 2% 92%, rgba(217,99,79,0.10) 0%, transparent 34%),
+    linear-gradient(160deg,#FBFAF6 0%,#F5F3ED 55%,#EFEBE2 100%);
+  background-attachment:fixed;
+  line-height:1.55;
+}
+.fh-display{font-family:'Fraunces',serif;}
+.fh-mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ---- Top bar ---- */
+.topbar{
+  position:sticky; top:0; z-index:50; backdrop-filter:blur(10px);
+  background:rgba(249,247,242,0.86); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:16px; padding:14px 22px;
+}
+.topbar .brand{display:flex; align-items:center; gap:9px; font-family:'Fraunces',serif; font-weight:700; font-size:19px; flex-shrink:0;}
+.topbar .brand-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(219,154,60,0.18);}
+.topbar .tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--faint); border:1px solid var(--border); padding:3px 9px; border-radius:999px; flex-shrink:0;}
+.search-wrap{flex:1; max-width:420px; margin-left:auto; position:relative;}
+.search-wrap input{
+  width:100%; font-family:'Inter'; font-size:13.5px; padding:9px 14px 9px 34px;
+  border-radius:999px; border:1px solid var(--border); outline:none; background:#fff;
+}
+.search-wrap input:focus{border-color:var(--slate);}
+.search-icon{position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--faint); pointer-events:none;}
+.search-hint{font-size:10.5px; color:var(--faint); margin-top:4px; padding-left:14px; display:none;}
+
+/* ---- Layout ---- */
+.shell{display:grid; grid-template-columns:240px 1fr; max-width:1080px; margin:0 auto; gap:0;}
+@media (max-width:820px){ .shell{grid-template-columns:1fr;} .sidebar{display:none;} .mobile-nav{display:flex;} }
+
+.sidebar{
+  position:sticky; top:65px; align-self:start; height:calc(100vh - 65px); overflow-y:auto;
+  padding:28px 14px 40px 22px;
+}
+.sidebar .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:0.08em; margin:18px 0 8px 10px;}
+.sidebar .eyebrow:first-child{margin-top:0;}
+.navlink{
+  display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500; color:var(--muted);
+  padding:8px 10px; border-radius:9px; text-decoration:none; cursor:pointer; transition:background .15s ease,color .15s ease;
+}
+.navlink:hover{background:rgba(38,48,61,0.05);}
+.navlink.active{background:#fff; color:var(--ink); font-weight:700; box-shadow:0 1px 2px rgba(38,48,61,0.06);}
+.navlink .ic{font-size:14px; width:18px; text-align:center; flex-shrink:0;}
+
+.mobile-nav{display:none; overflow-x:auto; gap:8px; padding:12px 16px; border-bottom:1px solid var(--border); background:rgba(249,247,242,0.9); position:sticky; top:57px; z-index:40;}
+.mobile-nav a{flex-shrink:0; font-size:12.5px; font-weight:600; color:var(--muted); background:#fff; border:1px solid var(--border); padding:7px 12px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+
+.content{padding:36px 26px 100px;}
+.hero{margin-bottom:36px;}
+.hero .kicker{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber); font-weight:600; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:10px;}
+.hero h1{font-family:'Fraunces',serif; font-size:38px; font-weight:700; margin:0 0 12px; letter-spacing:-0.01em; line-height:1.1;}
+.hero p{font-size:15px; color:var(--muted); max-width:520px; margin:0;}
+
+section.section{scroll-margin-top:80px; margin-bottom:48px;}
+section.section h2{
+  font-family:'Fraunces',serif; font-size:23px; font-weight:600; margin:0 0 14px;
+  display:flex; align-items:center; gap:10px;
+}
+section.section h2 .ic{font-size:20px;}
+section.section h3{font-size:15px; font-weight:700; margin:22px 0 8px;}
+section.section p{font-size:14.5px; color:var(--ink); margin:0 0 12px;}
+section.section p.muted{color:var(--muted);}
+
+.card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 22px; box-shadow:0 1px 2px rgba(38,48,61,0.04), 0 8px 24px rgba(38,48,61,0.04);}
+
+ol.steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+ol.steps li{
+  counter-increment:step; position:relative; padding:8px 0 8px 34px; font-size:14.5px;
+}
+ol.steps li::before{
+  content:counter(step); position:absolute; left:0; top:6px; width:22px; height:22px; border-radius:50%;
+  background:var(--ink); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600;
+  display:flex; align-items:center; justify-content:center;
+}
+
+table.role-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.role-table th, table.role-table td{text-align:left; padding:9px 10px; border-bottom:1px solid #F0EEE7;}
+table.role-table th{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--faint); letter-spacing:0.03em;}
+table.role-table td:not(:first-child){text-align:center;}
+.yes{color:var(--sage); font-weight:700;}
+.no{color:var(--coral); font-weight:700;}
+
+.pill-note{
+  display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:var(--slate);
+  background:#EEF2F5; padding:6px 12px; border-radius:999px; margin:4px 0 14px;
+}
+
+.rating-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:14px 0;}
+.rating-chip{border-radius:12px; padding:12px 14px; font-size:13px; font-weight:600;}
+.rating-chip small{display:block; font-weight:500; opacity:0.8; margin-top:2px;}
+.r-excellent{background:#EAF1E7; color:var(--sage);}
+.r-good{background:#EAF0F5; color:var(--slate);}
+.r-poor{background:#FBF2E4; color:var(--amber);}
+.r-terrible{background:#FBEAE6; color:var(--coral);}
+
+.faq-item{border-bottom:1px solid #F0EEE7;}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; cursor:pointer;
+  padding:14px 2px; font-size:14.5px; font-weight:600;
+}
+.faq-q .chev{font-family:'IBM Plex Mono',monospace; color:var(--faint); transition:transform .2s ease; font-size:13px;}
+.faq-item.open .chev{transform:rotate(45deg);}
+.faq-a{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.faq-item.open .faq-a{max-height:220px;}
+.faq-a p{padding:0 2px 14px; font-size:13.5px; color:var(--muted); margin:0;}
+
+table.trouble{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.trouble th, table.trouble td{text-align:left; padding:10px; border-bottom:1px solid #F0EEE7; vertical-align:top;}
+table.trouble th{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--faint);}
+
+.footer-cta{
+  margin-top:60px; padding:28px; border-radius:18px; text-align:center;
+  background:linear-gradient(135deg, rgba(219,154,60,0.10), rgba(124,148,115,0.10));
+  border:1px solid var(--border);
+}
+.footer-cta .fh-display{font-size:19px; font-weight:600; margin-bottom:6px;}
+.footer-cta p{color:var(--muted); font-size:13.5px; margin:0;}
+
+/* ---- Help bot ---- */
+.bot-launcher{
+  position:fixed; bottom:24px; right:24px; z-index:200;
+  width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--ink); color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 10px 28px rgba(38,48,61,0.28); transition:transform .18s ease;
+}
+.bot-launcher:hover{transform:scale(1.06);}
+.bot-launcher .ping{
+  position:absolute; top:-3px; right:-3px; width:14px; height:14px; border-radius:50%;
+  background:var(--amber); border:2px solid #F8F6F1;
+}
+.bot-panel{
+  position:fixed; bottom:92px; right:24px; z-index:200; width:340px; max-width:calc(100vw - 32px);
+  height:460px; max-height:calc(100vh - 130px); background:#fff; border-radius:18px; border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(38,48,61,0.28); display:none; flex-direction:column; overflow:hidden;
+}
+.bot-panel.open{display:flex;}
+.bot-head{
+  display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg, rgba(219,154,60,0.08), rgba(124,148,115,0.08));
+}
+.bot-head .avatar{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:13px;flex-shrink:0;}
+.bot-head .titles{flex:1;}
+.bot-head .name{font-size:13.5px; font-weight:700;}
+.bot-head .status{font-size:10.5px; color:var(--sage); display:flex; align-items:center; gap:4px;}
+.bot-head .status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sage);}
+.bot-close{background:none;border:none;font-size:16px;color:var(--faint);cursor:pointer;padding:4px;}
+
+.bot-messages{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; font-size:13.5px;}
+.bot-msg{display:flex; gap:8px; align-items:flex-end; max-width:88%;}
+.bot-msg.user{align-self:flex-end; flex-direction:row-reverse;}
+.bot-msg .bubble{padding:9px 12px; border-radius:14px; line-height:1.45; background:var(--bg);}
+.bot-msg.user .bubble{background:var(--ink); color:#fff;}
+.bot-msg .bubble a{color:var(--slate); font-weight:600;}
+.bot-msg.user .bubble a{color:#DFE9F0;}
+.bot-msg .mini-avatar{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:10.5px;font-weight:700;}
+.bot-msg.user .mini-avatar{background:var(--amber);}
+
+.bot-chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 12px;}
+.bot-chip{font-size:11.5px; font-weight:600; color:var(--slate); background:#EEF2F5; border:none; padding:6px 11px; border-radius:999px; cursor:pointer;}
+.bot-chip:hover{background:#E2EAEF;}
+
+.bot-input-row{display:flex; gap:8px; padding:12px; border-top:1px solid var(--border);}
+.bot-input-row input{flex:1; font-family:'Inter'; font-size:13px; padding:9px 12px; border-radius:999px; border:1px solid var(--border); outline:none;}
+.bot-input-row button{width:36px;height:36px;border-radius:50%;border:none;background:var(--amber);color:#fff;cursor:pointer;flex-shrink:0;font-size:14px;}
+.bot-typing{display:flex; gap:4px; padding:2px 4px;}
+.bot-typing span{width:6px;height:6px;border-radius:50%;background:var(--faint);animation:bt 1.2s infinite ease-in-out;}
+.bot-typing span:nth-child(2){animation-delay:.15s;}
+.bot-typing span:nth-child(3){animation-delay:.3s;}
+@keyframes bt{0%,60%,100%{opacity:.3; transform:translateY(0);}30%{opacity:1; transform:translateY(-3px);}}
+@media (max-width:480px){ .bot-panel{right:16px; left:16px; width:auto;} .bot-launcher{right:16px;} }
+
+.hidden-by-search{display:none !important;}
+mark{background:rgba(219,154,60,0.35); color:inherit; border-radius:3px; padding:0 2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-dot"></span>FamHome <span style="font-weight:400;color:var(--muted);font-size:14px;">Help</span></div>
+  <span class="tag fh-mono">v1</span>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input id="searchInput" type="text" placeholder="Search help articles…" />
+  </div>
+</div>
+
+<div class="mobile-nav" id="mobileNav"></div>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="hero">
+      <div class="kicker">Help Center</div>
+      <h1>Everything FamHome<br/>can do for your family.</h1>
+      <p>Search above, or browse by topic on the left. Every feature is explained the way you'd actually use it.</p>
+    </div>
+
+    <section class="section" id="getting-started" data-title="Getting Started" data-icon="🚀">
+      <h2><span class="ic">🚀</span>Getting Started</h2>
+      <div class="card">
+        <h3>Creating a family</h3>
+        <ol class="steps">
+          <li>Open FamHome and enter your name.</li>
+          <li>Tap <strong>"Create a new family code."</strong></li>
+          <li>You'll get a short code, like <span class="fh-mono">MAPLE-42</span> — this is how others join.</li>
+          <li>You become the <strong>operator</strong> automatically.</li>
+        </ol>
+        <h3>Joining a family</h3>
+        <ol class="steps">
+          <li>Get the family code (or join link) from whoever created it.</li>
+          <li>Enter your name and the code, then tap <strong>Connect</strong>.</li>
+          <li>Came from a join link? The code fills in automatically — just add your name.</li>
+        </ol>
+        <p class="muted">Operators can tap <strong>"Copy join link"</strong> in the header to share an invite instantly.</p>
+      </div>
+    </section>
+
+    <section class="section" id="roles" data-title="Roles" data-icon="🧭">
+      <h2><span class="ic">🧭</span>Roles: Operator vs. Viewer</h2>
+      <div class="card">
+        <table class="role-table">
+          <tr><th>Can do</th><th>Operator</th><th>Viewer</th></tr>
+          <tr><td>See everyone's location</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Chat (group & private)</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Send reminders</td><td class="yes">✓</td><td class="no">✕</td></tr>
+          <tr><td>Add/remove saved places</td><td class="yes">✓</td><td class="no">✕</td></tr>
+          <tr><td>Assign quizzes</td><td class="yes">✓</td><td class="no">✕</td></tr>
+          <tr><td>Promote/demote members</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        </table>
+        <p class="muted" style="margin-top:14px;">Whoever creates the family is always an operator. Operators can switch anyone else's role from the family list. If an operator leaves, their role passes to another member automatically.</p>
+      </div>
+    </section>
+
+    <section class="section" id="map" data-title="Map & Location" data-icon="📍">
+      <h2><span class="ic">📍</span>Map &amp; Location</h2>
+      <div class="card">
+        <p>Everyone's location shows live on a real map. Tap <strong>"Share my real location"</strong> to turn on live GPS — your phone will ask permission.</p>
+        <p>Every family member's card shows <strong>distance from you</strong> (e.g. "450 m away"), updating as people move.</p>
+        <p class="muted">You can also drag any pin manually — handy for testing without needing to physically move.</p>
+      </div>
+    </section>
+
+    <section class="section" id="places" data-title="Places & Alerts" data-icon="🏠">
+      <h2><span class="ic">🏠</span>Saved Places &amp; Arrival Alerts</h2>
+      <div class="card">
+        <p>Operators can save places like Home, School, or a friend's house. Tap <strong>"+ Add place,"</strong> then tap the map to drop a pin, name it, and pick a category.</p>
+        <p><strong>Everyone gets notified automatically</strong> the moment someone arrives at or leaves a saved place — no need to check manually.</p>
+      </div>
+    </section>
+
+    <section class="section" id="reminders" data-title="Reminders & Homework" data-icon="🔔">
+      <h2><span class="ic">🔔</span>Reminders &amp; Homework Photos</h2>
+      <div class="card">
+        <p>Operators can send one-tap reminders: 💧 Drink water, 🍎 Eat something, 📚 Do homework.</p>
+        <div class="pill-note">📷 Homework reminders require photo proof</div>
+        <p>The child sees a "Homework" card with an <strong>Attach photo</strong> button — tapping it opens their camera directly. Once submitted, operators see a thumbnail to review.</p>
+      </div>
+    </section>
+
+    <section class="section" id="chat" data-title="Chat" data-icon="💬">
+      <h2><span class="ic">💬</span>Chat</h2>
+      <div class="card">
+        <p><strong>Group chat</strong> — message the whole family at once.</p>
+        <p><strong>Private chat</strong> — tap any family member's name in the chat tab to open a 1-on-1 conversation. Private messages never appear in the group thread.</p>
+      </div>
+    </section>
+
+    <section class="section" id="sleep" data-title="Sleep Tracking" data-icon="😴">
+      <h2><span class="ic">😴</span>Sleep Tracking</h2>
+      <div class="card">
+        <p><strong>How it works:</strong> if FamHome hasn't been opened for a while, that time counts as "asleep." Opening the app and using it for <strong>5+ continuous minutes</strong> confirms "awake" and logs the sleep session automatically.</p>
+        <div class="rating-grid">
+          <div class="rating-chip r-excellent">Excellent<small>8+ hours</small></div>
+          <div class="rating-chip r-good">Good<small>6.5–8 hours</small></div>
+          <div class="rating-chip r-poor">Poor<small>5–6.5 hours</small></div>
+          <div class="rating-chip r-terrible">Terrible<small>Under 5 hours</small></div>
+        </div>
+        <p>You can also add a sleep entry manually (bedtime + wake time) for nights the automatic system missed.</p>
+        <p class="muted">Note: this estimates sleep from app activity, not real sleep sensors — a helpful pattern-tracker, not medical data.</p>
+      </div>
+    </section>
+
+    <section class="section" id="quizzes" data-title="Quizzes & Streaks" data-icon="📚">
+      <h2><span class="ic">📚</span>Quizzes &amp; Streaks</h2>
+      <div class="card">
+        <p>Operators assign a quiz by <strong>subject</strong> (Math, English, Science, Basic Knowledge) and <strong>grade (1–9)</strong> to any child.</p>
+        <p>Kids take the quiz anytime from their own Quizzes tab — 3 multiple-choice questions, with math questions freshly generated each time.</p>
+        <p>Passing on a new day builds a <strong>🔥 streak</strong> — missing a day resets it back to 1.</p>
+      </div>
+    </section>
+
+    <section class="section" id="background" data-title="Personalizing Background" data-icon="🎨">
+      <h2><span class="ic">🎨</span>Personalizing Your Background</h2>
+      <div class="card">
+        <p>Tap <strong>"🎨 Background"</strong> in the header to pick your own look — 4 preset moods (Warm, Meadow, Sky, Blush) or your own custom color.</p>
+        <p class="muted">This is personal to you only — it doesn't change what anyone else in your family sees.</p>
+      </div>
+    </section>
+
+    <section class="section" id="leaving" data-title="Leaving / Switching" data-icon="🚪">
+      <h2><span class="ic">🚪</span>Leaving &amp; Switching Accounts</h2>
+      <div class="card">
+        <p><strong>Log out</strong> — signs you out on this device but keeps your spot in the family. Use this to switch who's logged in.</p>
+        <p><strong>Leave family</strong> — permanently removes you from the group. You'll need a code to join again.</p>
+      </div>
+    </section>
+
+    <section class="section" id="faq" data-title="FAQ" data-icon="❓">
+      <h2><span class="ic">❓</span>Frequently Asked Questions</h2>
+      <div class="card" id="faqList">
+        <div class="faq-item">
+          <div class="faq-q">Can two people have the same name in one family?<span class="chev">+</span></div>
+          <div class="faq-a"><p>Try to avoid it — your name is used to identify you when reconnecting, so a duplicate could get confused with someone else's.</p></div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Why isn't my location updating?<span class="chev">+</span></div>
+          <div class="faq-a"><p>Make sure you tapped "Share my real location" and allowed location permission when your browser asked. If the app/tab is closed, location stops updating.</p></div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Can FamHome lock my child's other apps or games?<span class="chev">+</span></div>
+          <div class="faq-a"><p>Not yet — that requires a native phone app with special permissions. FamHome currently manages access within itself only, like the homework-photo requirement.</p></div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Is my family's data private?<span class="chev">+</span></div>
+          <div class="faq-a"><p>It's visible to everyone who has your family code — so only share the code or join link with people you trust.</p></div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What if I lose the family code?<span class="chev">+</span></div>
+          <div class="faq-a"><p>Ask any current operator to share the "Copy join link" with you again.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="troubleshooting" data-title="Troubleshooting" data-icon="🛠️">
+      <h2><span class="ic">🛠️</span>Troubleshooting</h2>
+      <div class="card">
+        <table class="trouble">
+          <tr><th>Problem</th><th>Try this</th></tr>
+          <tr><td>Can't reconnect to my family</td><td>Make sure you're entering the exact same name and code you used before.</td></tr>
+          <tr><td>Notifications aren't showing</td><td>Check that you allowed notification permission when prompted.</td></tr>
+          <tr><td>Map looks blank</td><td>Refresh the page — the map tiles may not have finished loading.</td></tr>
+          <tr><td>Sleep tracking seems off</td><td>Remember: it only tracks while the app is open/backgrounded, not the whole phone.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-cta">
+      <div class="fh-display">Still stuck?</div>
+      <p>Ask whoever set up your family — operators can see and manage every setting covered here.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+const sections = Array.from(document.querySelectorAll('section.section'));
+const sidebar = document.getElementById('sidebar');
+const mobileNav = document.getElementById('mobileNav');
+
+const eyebrowGroups = [
+  { label: 'Basics', ids: ['getting-started','roles'] },
+  { label: 'Features', ids: ['map','places','reminders','chat','sleep','quizzes','background'] },
+  { label: 'Account', ids: ['leaving'] },
+  { label: 'Support', ids: ['faq','troubleshooting'] },
+];
+
+eyebrowGroups.forEach(group => {
+  const eyebrow = document.createElement('div');
+  eyebrow.className = 'eyebrow';
+  eyebrow.textContent = group.label;
+  sidebar.appendChild(eyebrow);
+  group.ids.forEach(id => {
+    const sec = document.getElementById(id);
+    if (!sec) return;
+    const a = document.createElement('a');
+    a.className = 'navlink';
+    a.href = '#' + id;
+    a.innerHTML = `<span class="ic">${sec.dataset.icon}</span>${sec.dataset.title}`;
+    sidebar.appendChild(a);
+  });
+});
+
+sections.forEach(sec => {
+  const a = document.createElement('a');
+  a.href = '#' + sec.id;
+  a.textContent = sec.dataset.title;
+  mobileNav.appendChild(a);
+});
+
+const navlinks = Array.from(document.querySelectorAll('.navlink'));
+function setActive() {
+  let currentId = sections[0].id;
+  const scrollPos = window.scrollY + 100;
+  sections.forEach(sec => { if (sec.offsetTop <= scrollPos) currentId = sec.id; });
+  navlinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + currentId));
+}
+document.addEventListener('scroll', setActive);
+setActive();
+
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+});
+
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', () => {
+  const term = searchInput.value.trim().toLowerCase();
+  sections.forEach(sec => {
+    if (!term) { sec.classList.remove('hidden-by-search'); return; }
+    const text = sec.textContent.toLowerCase();
+    sec.classList.toggle('hidden-by-search', !text.includes(term));
+  });
+});
+</script>
+<button class="bot-launcher" id="botLauncher" aria-label="Open help assistant">
+  💬<span class="ping"></span>
+</button>
+
+<div class="bot-panel" id="botPanel">
+  <div class="bot-head">
+    <div class="avatar">F</div>
+    <div class="titles">
+      <div class="name">FamHome Assistant</div>
+      <div class="status" id="botStatusLine">Answers from this help center</div>
+    </div>
+    <button class="bot-close" id="botClose">✕</button>
+  </div>
+  <div class="bot-messages" id="botMessages"></div>
+  <div class="bot-chips" id="botChips"></div>
+  <div class="bot-input-row">
+    <input id="botInput" type="text" placeholder="Ask a question…" />
+    <button id="botSend">➤</button>
+  </div>
+</div>
+
+<script>
+// ---- Help Bot: keyword-matching assistant over this page's own content ----
+const KB = [
+  { id:"getting-started", title:"Getting Started", keywords:[
+      "join","create","code","sign up","signup","start","new family","begin","register","account",
+      "invite","invitation","link","how do i join","how do i create","get started","onboard","setup","set up",
+      "connect","enter code","family code","password","login","log in"
+    ],
+    answer:"To <strong>create a family</strong>, enter your name and tap \"Create a new family code\" — you'll get a short code and become the operator automatically. To <strong>join</strong>, enter your name plus that code (or use a join link, which fills the code in for you) and tap Connect." },
+  { id:"roles", title:"Roles", keywords:[
+      "operator","viewer","role","permission","admin","administrator","who can","promote","demote","control",
+      "manage","management","access","in charge","boss","owner","parent access","kid access","child access",
+      "restrict","allow","authority","rank"
+    ],
+    answer:"There are two roles: <strong>Operators</strong> can send reminders, manage places, assign quizzes, and change others' roles. <strong>Viewers</strong> can see the map and chat, but can't manage settings. Whoever creates the family starts as operator, and operators can promote/demote anyone else." },
+  { id:"map", title:"Map & Location", keywords:[
+      "location","map","gps","distance","where is","track","tracking","pin","real location","find",
+      "find my","find him","find her","find them","see where","current location","live location","position",
+      "coordinates","far","near","how far","how close","whereabouts","navigate","navigation"
+    ],
+    answer:"Everyone's live location shows on the map once they tap \"Share my real location\" and allow GPS permission. Each person's card also shows their live <strong>distance from you</strong>." },
+  { id:"places", title:"Places & Alerts", keywords:[
+      "place","home","school","arrive","arrival","leave","leaving","left","geofence","fence","zone",
+      "notification","alert","notify","ping","safe zone","radius","drop pin","add place","saved place",
+      "when he gets home","when she gets home","got home","made it"
+    ],
+    answer:"Operators can save places (Home, School, etc.) by tapping \"+ Add place\" and dropping a pin. Everyone gets notified automatically the moment someone <strong>arrives at</strong> or <strong>leaves</strong> a saved place." },
+  { id:"reminders", title:"Reminders & Homework", keywords:[
+      "reminder","remind","homework","photo","picture","image","water","drink","eat","food","hungry","meal",
+      "proof","camera","task","chore","todo","to do","nudge","forgot","forget","assignment","school work",
+      "prove","submit","attach"
+    ],
+    answer:"Operators can send reminders like drink water, eat, or do homework. <strong>Homework reminders require a photo</strong> — the child gets an \"Attach photo\" button that opens their camera, and operators can review the submitted photo afterward." },
+  { id:"chat", title:"Chat", keywords:[
+      "chat","message","messaging","private","group message","dm","text","texting","talk","conversation",
+      "reply","respond","group chat","private chat","one on one","1 on 1","send message"
+    ],
+    answer:"You can message the whole family in <strong>group chat</strong>, or tap someone's name to open a <strong>private 1-on-1 chat</strong> that only the two of you can see." },
+  { id:"sleep", title:"Sleep Tracking", keywords:[
+      "sleep","wake","wake up","bedtime","tired","nap","rest","resting","asleep","awake","insomnia",
+      "how much sleep","sleep quality","sleep rating","sleeping","slept","hours of sleep","good sleep",
+      "bad sleep","night"
+    ],
+    answer:"FamHome estimates sleep by noticing when the app hasn't been opened for a while (counted as asleep), then confirms \"awake\" once it's used for 5+ minutes straight. Each night gets a rating: Excellent, Good, Poor, or Terrible. You can also log a night manually if it's missed automatically." },
+  { id:"quizzes", title:"Quizzes & Streaks", keywords:[
+      "quiz","test","subject","grade","math","mathematics","science","english","streak","learning","study",
+      "studying","education","learn","exam","practice","questions","homework quiz","assign quiz",
+      "school subject","grade level","class level"
+    ],
+    answer:"Operators assign a quiz by subject (Math, English, Science, Basic Knowledge) and grade (1–9). Kids can take it anytime — 3 questions, pass all 3 to build a 🔥 streak that grows every day they complete one." },
+  { id:"background", title:"Personalizing Background", keywords:[
+      "background","theme","color","colour","customize","customise","personalize","personalise","appearance",
+      "look","style","wallpaper","design","change look","change color","dark mode","light mode"
+    ],
+    answer:"Tap \"🎨 Background\" to pick a preset mood or your own custom color. It's personal to just you — it won't change what anyone else sees." },
+  { id:"leaving", title:"Leaving / Switching", keywords:[
+      "leave","log out","logout","sign out","signout","remove","delete account","switch account","exit",
+      "quit","get out","kick","kick out","change account","different account","switch user","sign off"
+    ],
+    answer:"\"Log out\" signs you out but keeps your spot in the family — good for switching who's using the device. \"Leave family\" permanently removes you; you'd need the code again to rejoin." },
+  { id:"faq", title:"Privacy / Data", keywords:[
+      "private","privacy","data","safe","secure","security","who can see","confidential","protect",
+      "protection","share data","visible","seen by","spy","surveillance"
+    ],
+    answer:"Anyone with your family code can see the shared location, chat, and places data — so only share the code or join link with people you trust." },
+  { id:"troubleshooting", title:"Troubleshooting", keywords:[
+      "not working","broken","bug","problem","issue","blank","stuck","help","error","fix","doesn't work",
+      "does not work","won't work","wont work","glitch","fail","failing","failed","crash","crashed",
+      "refresh","reload","trouble"
+    ],
+    answer:"A few common fixes: make sure location/notification permissions were allowed when your browser asked, double-check you're using the exact name+code you joined with, and try refreshing if the map looks blank." },
+];
+
+const GREETING = "Hi! I'm the FamHome Assistant. Ask me anything about setting up your family, reminders, sleep tracking, quizzes, or anything else on this page.";
+const FALLBACK = "I couldn't find anything on that topic in the help center yet. Try rephrasing, or pick a topic below:";
+const STOPWORDS = new Set(["a","an","the","is","are","was","were","do","does","did","can","could","should","would",
+  "to","for","in","on","of","how","what","why","when","where","who","which","my","i","me","you","your","it","its",
+  "this","that","and","or","but","if","so","with","about","will","just","get","got","have","has","need","want",
+  "please","tell","explain","there","be","am"]);
+
+function stem(word) {
+  word = word.toLowerCase();
+  if (word.length > 5 && word.endsWith("ing")) word = word.slice(0, -3);
+  else if (word.length > 4 && word.endsWith("ies")) word = word.slice(0, -3) + "y";
+  else if (word.length > 4 && word.endsWith("es")) word = word.slice(0, -2);
+  else if (word.length > 3 && word.endsWith("ed")) word = word.slice(0, -2);
+  else if (word.length > 3 && word.endsWith("s") && !word.endsWith("ss")) word = word.slice(0, -1);
+  return word;
+}
+
+function tokenize(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(w => w && !STOPWORDS.has(w))
+    .map(stem);
+}
+
+function levenshtein(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 99; // quick reject, keeps this cheap
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+// Precompute a stemmed token bag per KB entry once
+KB.forEach(entry => {
+  const bag = new Set();
+  entry.keywords.forEach(phrase => tokenize(phrase).forEach(t => bag.add(t)));
+  tokenize(entry.title).forEach(t => bag.add(t));
+  entry._tokens = Array.from(bag);
+});
+
+function scoreEntry(entry, queryTokens) {
+  let score = 0;
+  queryTokens.forEach(qt => {
+    if (entry._tokens.includes(qt)) { score += 2; return; }
+    // fuzzy: catch typos on longer words only — short words (<=3 chars) have too many
+    // accidental 1-edit neighbors ("wat"~"eat") to fuzzy-match safely.
+    if (qt.length < 4) return;
+    for (const kt of entry._tokens) {
+      if (kt.length < 4) continue;
+      if (Math.abs(kt.length - qt.length) <= 1 && levenshtein(qt, kt) <= 1) { score += 1; break; }
+    }
+  });
+  return score;
+}
+
+function findAnswer(query) {
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return null;
+  let best = null, bestScore = 0;
+  KB.forEach(entry => {
+    const s = scoreEntry(entry, queryTokens);
+    if (s > bestScore) { bestScore = s; best = entry; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+
+const botMessages = document.getElementById('botMessages');
+const botChips = document.getElementById('botChips');
+const botInput = document.getElementById('botInput');
+
+function addMsg(text, who) {
+  const row = document.createElement('div');
+  row.className = 'bot-msg' + (who === 'user' ? ' user' : '');
+  row.innerHTML = `<div class="mini-avatar">${who === 'user' ? 'Y' : 'F'}</div><div class="bubble">${text}</div>`;
+  botMessages.appendChild(row);
+  botMessages.scrollTop = botMessages.scrollHeight;
+  return row;
+}
+
+function showTyping() {
+  const row = document.createElement('div');
+  row.className = 'bot-msg';
+  row.innerHTML = `<div class="mini-avatar">F</div><div class="bubble"><div class="bot-typing"><span></span><span></span><span></span></div></div>`;
+  botMessages.appendChild(row);
+  botMessages.scrollTop = botMessages.scrollHeight;
+  return row;
+}
+
+function renderChips(list) {
+  botChips.innerHTML = "";
+  list.forEach(entry => {
+    const chip = document.createElement('button');
+    chip.className = 'bot-chip';
+    chip.textContent = entry.title;
+    chip.onclick = () => handleUserQuery(entry.title);
+    botChips.appendChild(chip);
+  });
+}
+
+const SMALL_TALK = [
+  { test: t => /^(hi|hello|hey|yo|hiya|howdy|sup)\b/.test(t),
+    replies: ["Hey there! 👋 What can I help you with in FamHome?", "Hi! Ask me anything about setting up or using FamHome.", "Hello! What would you like to know?"] },
+  { test: t => /\b(thank you|thanks|thx|ty|appreciate it)\b/.test(t),
+    replies: ["You're welcome! Anything else I can help with?", "Happy to help! 🙂", "Anytime!"] },
+  { test: t => /\b(bye|goodbye|see ya|see you|later|gtg)\b/.test(t),
+    replies: ["Bye! Come back anytime you have questions. 👋", "See you later!"] },
+  { test: t => /how are you/.test(t),
+    replies: ["Doing well, thanks for asking! How can I help with FamHome?"] },
+  { test: t => /(who are you|what are you)/.test(t),
+    replies: ["I'm the FamHome Assistant — I answer questions using everything written in this help center. Ask me about reminders, sleep tracking, quizzes, or anything else!"] },
+  { test: t => /(what can you do|what do you know|help me|your capabilities)/.test(t),
+    replies: ["I can help with: joining/creating a family, roles, location & the map, places & alerts, reminders & homework photos, chat, sleep tracking, quizzes & streaks, backgrounds, and troubleshooting. What do you need?"] },
+];
+
+function checkSmallTalk(text) {
+  const t = text.toLowerCase().trim();
+  for (const entry of SMALL_TALK) {
+    if (entry.test(t)) return entry.replies[Math.floor(Math.random() * entry.replies.length)];
+  }
+  return null;
+}
+
+// ---- Real AI: calls Claude directly ----
+// This works with ZERO setup, no API key needed — but ONLY while this page is
+// viewed inside Claude.ai's own preview/artifact environment. If you download
+// this file and host it on your own site or Canva, this call will fail (by
+// design — api.anthropic.com only authorizes requests from inside Claude.ai),
+// and the bot will automatically fall back to the local keyword-matching
+// engine below, so it still works everywhere, just without live AI.
+const USE_CLAUDE_IN_ARTIFACT = true;
+
+const FAMHOME_SYSTEM_PROMPT = `You are the FamHome Assistant, a friendly, concise help-center chatbot for the FamHome family app.
+Only answer using the facts below. If something isn't covered here, say you're not sure and suggest the user ask a family operator, rather than inventing an answer. Keep replies short (2-4 sentences) and warm, like a helpful person, not a formal manual.
+
+FAMHOME FEATURES:
+- Getting started: Create a family by entering your name and tapping "Create a new family code" — you get a short code (e.g. MAPLE-42) and become the operator. Join by entering your name + the code, or via a join link that pre-fills the code.
+- Roles: Operators can send reminders, manage places, assign quizzes, and change others' roles. Viewers can see the map and chat but can't manage settings. The family creator is always an operator; if they leave, their role passes to another member automatically.
+- Map & Location: Everyone's live location shows on a real map after tapping "Share my real location" and allowing GPS permission. Every member's card shows live distance from you. Pins can also be dragged manually for testing.
+- Places & Alerts: Operators save places (Home, School, etc.) by tapping "+ Add place" and dropping a pin. Everyone is notified automatically when someone arrives at or leaves a saved place.
+- Reminders & Homework: Operators send one-tap reminders (drink water, eat, do homework). Homework reminders require a photo — the child gets an "Attach photo" button that opens their camera; operators can review submitted photos.
+- Chat: Group chat messages the whole family. Private chat opens a 1-on-1 thread with any single member, invisible to others.
+- Sleep Tracking: If the app hasn't been opened for a while, that time counts as "asleep." Opening it and using it for 5+ continuous minutes confirms "awake" and logs the session automatically, rated Excellent (8h+), Good (6.5-8h), Poor (5-6.5h), or Terrible (<5h). Users can also add a sleep entry manually. This estimates from app activity, not real sleep sensors.
+- Quizzes & Streaks: Operators assign a quiz by subject (Math, English, Science, Basic Knowledge) and grade (1-9). Kids take 3 multiple-choice questions anytime; passing on a new day builds a streak, missing a day resets it to 1.
+- Backgrounds: Users can personalize their own background via preset moods or a custom color picker — this is personal and doesn't affect what others see.
+- Leaving/Switching: "Log out" signs out but keeps your family membership. "Leave family" permanently removes you; you'd need the code to rejoin.
+- Privacy: Anyone with the family code can see the shared location, chat, and places data — only share the code with people you trust.
+- Limitations: FamHome cannot lock other apps on a real phone or read total phone-wide screen time — that requires a native app with special OS permissions, which FamHome (a web app) doesn't have.`;
+
+let chatHistory = []; // {role:'user'|'bot', text} — sent along for multi-turn context
+
+async function askClaude(text) {
+  const messages = [
+    ...chatHistory.map(h => ({ role: h.role === 'bot' ? 'assistant' : 'user', content: h.text })),
+    { role: 'user', content: text },
+  ];
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 300,
+      system: FAMHOME_SYSTEM_PROMPT,
+      messages,
+    }),
+  });
+  if (!res.ok) throw new Error("Claude API error " + res.status);
+  const data = await res.json();
+  const block = data.content && data.content.find(b => b.type === "text");
+  if (!block || !block.text) throw new Error("Empty reply");
+  return block.text.trim();
+}
+
+function localAnswer(text) {
+  const smallTalk = checkSmallTalk(text);
+  if (smallTalk) return { text: smallTalk, match: null };
+  const match = findAnswer(text);
+  if (match) return { text: `${match.answer} <br/><a href="#${match.id}">Jump to full article →</a>`, match };
+  return { text: FALLBACK, match: null };
+}
+
+async function handleUserQuery(text) {
+  if (!text.trim()) return;
+  addMsg(text, 'user');
+  chatHistory.push({ role: "user", text });
+  botInput.value = "";
+  const typingRow = showTyping();
+
+  let replyText, matchedEntry = null;
+
+  if (USE_CLAUDE_IN_ARTIFACT) {
+    try {
+      replyText = await askClaude(text);
+    } catch (err) {
+      console.warn("Claude unavailable (expected outside Claude.ai) — falling back to local matching:", err);
+      const local = localAnswer(text);
+      replyText = local.text;
+      matchedEntry = local.match;
+    }
+  } else {
+    const local = localAnswer(text);
+    replyText = local.text;
+    matchedEntry = local.match;
+  }
+
+  typingRow.remove();
+  addMsg(replyText, 'bot');
+  chatHistory.push({ role: "bot", text: replyText });
+
+  if (matchedEntry) renderChips(KB.filter(e => e.id !== matchedEntry.id).slice(0, 3));
+  else renderChips([KB[0], KB.find(e=>e.id==='reminders'), KB.find(e=>e.id==='sleep'), KB.find(e=>e.id==='quizzes')]);
+}
+
+document.getElementById('botStatusLine').textContent = USE_CLAUDE_IN_ARTIFACT ? "Powered by Claude" : "Answers from this help center";
+
+document.getElementById('botLauncher').onclick = () => {
+  document.getElementById('botPanel').classList.add('open');
+  if (!botMessages.children.length) {
+    addMsg(GREETING, 'bot');
+    renderChips([KB[0], KB.find(e=>e.id==='reminders'), KB.find(e=>e.id==='sleep'), KB.find(e=>e.id==='quizzes')]);
+  }
+  botInput.focus();
+};
+document.getElementById('botClose').onclick = () => document.getElementById('botPanel').classList.remove('open');
+document.getElementById('botSend').onclick = () => handleUserQuery(botInput.value);
+botInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUserQuery(botInput.value); });
+</script>
+
+</body>
+</html>
